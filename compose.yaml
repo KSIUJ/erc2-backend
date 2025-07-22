@@ -1,0 +1,19 @@
+# This is only for local development!
+
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+psycopg://user:pass@postgres:5432/erc2
+  postgres:
+    image: postgres:17-alpine
+    ports:
+      - "9876:5432"
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_DB=erc2
+    volumes:
+      - ./data:/var/lib/postgresql/data
