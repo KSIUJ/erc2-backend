@@ -1,6 +1,5 @@
 from fastapi import Depends
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
+from sqlmodel import Session, create_engine
 from typing import Annotated
 from .config import settings
 
