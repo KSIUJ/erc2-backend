@@ -4,8 +4,9 @@ from datetime import date
 
 
 class Major(SQLModel, table=True):
+    __tablename__ = "majors"
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(index=True, unique=True, max_length=128)
+    name: str = Field(unique=True, max_length=128)
     members: List["Member"] = Relationship(back_populates="major")
 
     def __str__(self):
@@ -13,14 +14,15 @@ class Major(SQLModel, table=True):
 
 
 class Member(SQLModel, table=True):
+    __tablename__ = "members"
     id: Optional[int] = Field(default=None, primary_key=True)
     first_name: str = Field(max_length=128)
     last_name: str = Field(max_length=128)
-    email: str = Field(unique=True, index=True, max_length=128)
+    email: str = Field(unique=True, max_length=128)
     student_id: str = Field(unique=True, max_length=30)
     discord_id: Optional[str] = Field(default=None, unique=True, max_length=128)
-    major_id: int = Field(foreign_key="major.id")
-    major: Optional[Major] = Relationship(back_populates="members")
+    major_id: int = Field(foreign_key="majors.id")
+    major: Major = Relationship(back_populates="members")
     memberships: List["Membership"] = Relationship(back_populates="member")
 
     def __str__(self):
@@ -28,6 +30,7 @@ class Member(SQLModel, table=True):
 
 
 class Period(SQLModel, table=True):
+    __tablename__ = "periods"
     id: Optional[int] = Field(default=None, primary_key=True)
     start_date: date
     end_date: date
@@ -38,8 +41,9 @@ class Period(SQLModel, table=True):
 
 
 class Role(SQLModel, table=True):
+    __tablename__ = "roles"
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(unique=True, index=True, max_length=64)
+    name: str = Field(unique=True, max_length=64)
     membership_roles: List["MembershipRole"] = Relationship(back_populates="role")
 
     def __str__(self):
@@ -47,11 +51,12 @@ class Role(SQLModel, table=True):
 
 
 class MembershipRole(SQLModel, table=True):
+    __tablename__ = "membership_roles"
     membership_id: Optional[int] = Field(
-        default=None, foreign_key="membership.id", primary_key=True
+        default=None, foreign_key="memberships.id", primary_key=True
     )
     role_id: Optional[int] = Field(
-        default=None, foreign_key="role.id", primary_key=True
+        default=None, foreign_key="roles.id", primary_key=True
     )
     membership: "Membership" = Relationship(back_populates="membership_roles")
     role: "Role" = Relationship(back_populates="membership_roles")
@@ -65,9 +70,10 @@ class MembershipRole(SQLModel, table=True):
 
 
 class Membership(SQLModel, table=True):
+    __tablename__ = "memberships"
     id: Optional[int] = Field(default=None, primary_key=True)
-    member_id: int = Field(foreign_key="member.id")
-    period_id: int = Field(foreign_key="period.id")
+    member_id: int = Field(foreign_key="members.id")
+    period_id: int = Field(foreign_key="periods.id")
     fee_paid: bool = Field(default=False)
     tshirt_received: bool = Field(default=False)
     member: Member = Relationship(back_populates="memberships")
