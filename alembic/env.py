@@ -1,5 +1,6 @@
 from logging.config import fileConfig
 
+from sqlalchemy import MetaData
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
@@ -18,7 +19,15 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = None
+target_metadata = MetaData(
+    naming_convention={
+        "pk": "pk_%(table_name)s",
+        "fk": "fk_%(table_name)s_%(column_0_N_name)s_%(referred_table_name)s_%(referred_column_0_N_name)s",
+        "uq": "uq_%(table_name)s_%(column_0_N_name)s",
+        "ix": "ix_%(table_name)s_%(column_0_N_name)s",
+        "ck": "ck_%(table_name)s_%(column_0_N_name)s",
+    }
+)
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -64,9 +73,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()
