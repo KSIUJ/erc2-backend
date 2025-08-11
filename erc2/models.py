@@ -3,16 +3,6 @@ from typing import Optional, List
 from datetime import date
 
 
-class Major(SQLModel, table=True):
-    __tablename__ = "majors"
-    id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(unique=True, max_length=128)
-    members: List["Member"] = Relationship(back_populates="major")
-
-    def __str__(self):
-        return self.name
-
-
 class Member(SQLModel, table=True):
     __tablename__ = "members"
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -21,8 +11,6 @@ class Member(SQLModel, table=True):
     email: str = Field(unique=True, max_length=128)
     student_id: str = Field(unique=True, max_length=30)
     discord_id: Optional[str] = Field(default=None, unique=True, max_length=128)
-    major_id: int = Field(foreign_key="majors.id")
-    major: Major = Relationship(back_populates="members")
     memberships: List["Membership"] = Relationship(back_populates="member")
 
     def __str__(self):
@@ -69,6 +57,35 @@ class MembershipRole(SQLModel, table=True):
         return f"MembershipRole: {membership_display} - {role_display}"
 
 
+class Major(SQLModel, table=True):
+    __tablename__ = "majors"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(unique=True, max_length=128)
+    membership_majors: List["MembershipMajor"] = Relationship(back_populates="major")
+
+    def __str__(self):
+        return self.name
+
+
+class MembershipMajor(SQLModel, table=True):
+    __tablename__ = "membership_majors"
+    membership_id: Optional[int] = Field(
+        default=None, foreign_key="memberships.id", primary_key=True
+    )
+    major_id: Optional[int] = Field(
+        default=None, foreign_key="majors.id", primary_key=True
+    )
+    membership: "Membership" = Relationship(back_populates="membership_majors")
+    major: "Major" = Relationship(back_populates="membership_majors")
+
+    def __str__(self):
+        membership_display = (
+            str(self.membership) if self.membership else "Unknown Membership"
+        )
+        major_display = str(self.major) if self.major else "Unknown Major"
+        return f"MembershipMajor: {membership_display} - {major_display}"
+
+
 class Membership(SQLModel, table=True):
     __tablename__ = "memberships"
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -79,6 +96,9 @@ class Membership(SQLModel, table=True):
     member: Member = Relationship(back_populates="memberships")
     period: Period = Relationship(back_populates="memberships")
     membership_roles: List["MembershipRole"] = Relationship(back_populates="membership")
+    membership_majors: List["MembershipMajor"] = Relationship(
+        back_populates="membership"
+    )
 
     def __str__(self):
         member_display = (
