@@ -1,7 +1,7 @@
-"""multiple major support
+"""initial with multiple majors support
 
 Revision ID: ac2a254fbacc
-Revises: 4b81466ddac1
+Revises:
 Create Date: 2025-08-11 11:01:06.084475
 
 """
@@ -14,7 +14,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = "ac2a254fbacc"
-down_revision: Union[str, Sequence[str], None] = "4b81466ddac1"
+down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
