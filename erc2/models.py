@@ -2,6 +2,15 @@ from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
 from datetime import date
 
+class MembershipRole(SQLModel, table=True):
+    __tablename__ = "membership_roles"
+    membership_id: Optional[int] = Field(default=None, foreign_key="memberships.id", primary_key=True)
+    role_id: Optional[int] = Field(default=None, foreign_key="roles.id", primary_key=True)
+
+class MembershipMajor(SQLModel, table=True):
+    __tablename__ = "membership_majors"
+    membership_id: Optional[int] = Field(default=None, foreign_key="memberships.id", primary_key=True)
+    major_id: Optional[int] = Field(default=None, foreign_key="majors.id", primary_key=True)
 
 class Member(SQLModel, table=True):
     __tablename__ = "members"
@@ -16,7 +25,6 @@ class Member(SQLModel, table=True):
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
-
 class Period(SQLModel, table=True):
     __tablename__ = "periods"
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -27,64 +35,22 @@ class Period(SQLModel, table=True):
     def __str__(self):
         return f"{self.start_date.year}/{self.end_date.year}"
 
-
 class Role(SQLModel, table=True):
     __tablename__ = "roles"
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(unique=True, max_length=64)
-    membership_roles: List["MembershipRole"] = Relationship(back_populates="role")
+    memberships: List["Membership"] = Relationship(back_populates="roles", link_model=MembershipRole)
 
     def __str__(self):
         return self.name
-
-
-class MembershipRole(SQLModel, table=True):
-    __tablename__ = "membership_roles"
-    membership_id: Optional[int] = Field(
-        default=None, foreign_key="memberships.id", primary_key=True
-    )
-    role_id: Optional[int] = Field(
-        default=None, foreign_key="roles.id", primary_key=True
-    )
-    membership: "Membership" = Relationship(back_populates="membership_roles")
-    role: "Role" = Relationship(back_populates="membership_roles")
-
-    def __str__(self):
-        membership_display = (
-            str(self.membership) if self.membership else "Unknown Membership"
-        )
-        role_display = str(self.role) if self.role else "Unknown Role"
-        return f"MembershipRole: {membership_display} - {role_display}"
-
-
+        
 class Major(SQLModel, table=True):
     __tablename__ = "majors"
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(unique=True, max_length=128)
-    membership_majors: List["MembershipMajor"] = Relationship(back_populates="major")
-
+    memberships: List["Membership"] = Relationship(back_populates="majors", link_model=MembershipMajor)
     def __str__(self):
         return self.name
-
-
-class MembershipMajor(SQLModel, table=True):
-    __tablename__ = "membership_majors"
-    membership_id: Optional[int] = Field(
-        default=None, foreign_key="memberships.id", primary_key=True
-    )
-    major_id: Optional[int] = Field(
-        default=None, foreign_key="majors.id", primary_key=True
-    )
-    membership: "Membership" = Relationship(back_populates="membership_majors")
-    major: "Major" = Relationship(back_populates="membership_majors")
-
-    def __str__(self):
-        membership_display = (
-            str(self.membership) if self.membership else "Unknown Membership"
-        )
-        major_display = str(self.major) if self.major else "Unknown Major"
-        return f"MembershipMajor: {membership_display} - {major_display}"
-
 
 class Membership(SQLModel, table=True):
     __tablename__ = "memberships"
@@ -95,10 +61,8 @@ class Membership(SQLModel, table=True):
     tshirt_received: bool = Field(default=False)
     member: Member = Relationship(back_populates="memberships")
     period: Period = Relationship(back_populates="memberships")
-    membership_roles: List["MembershipRole"] = Relationship(back_populates="membership")
-    membership_majors: List["MembershipMajor"] = Relationship(
-        back_populates="membership"
-    )
+    roles: List["Role"] = Relationship(back_populates="memberships", link_model=MembershipRole)
+    majors: List["Major"] = Relationship(back_populates="memberships", link_model=MembershipMajor)
 
     def __str__(self):
         member_display = (
