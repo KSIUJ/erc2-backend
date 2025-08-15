@@ -3,14 +3,24 @@ from typing import Optional, List
 from datetime import date
 
 
-class Major(SQLModel, table=True):
-    __tablename__ = "majors"
-    id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(unique=True, max_length=128)
-    members: List["Member"] = Relationship(back_populates="major")
+class MembershipRole(SQLModel, table=True):
+    __tablename__ = "membership_roles"
+    membership_id: Optional[int] = Field(
+        default=None, foreign_key="memberships.id", primary_key=True
+    )
+    role_id: Optional[int] = Field(
+        default=None, foreign_key="roles.id", primary_key=True
+    )
 
-    def __str__(self):
-        return self.name
+
+class MembershipMajor(SQLModel, table=True):
+    __tablename__ = "membership_majors"
+    membership_id: Optional[int] = Field(
+        default=None, foreign_key="memberships.id", primary_key=True
+    )
+    major_id: Optional[int] = Field(
+        default=None, foreign_key="majors.id", primary_key=True
+    )
 
 
 class Member(SQLModel, table=True):
@@ -21,8 +31,6 @@ class Member(SQLModel, table=True):
     email: str = Field(unique=True, max_length=128)
     student_id: str = Field(unique=True, max_length=30)
     discord_id: Optional[str] = Field(default=None, unique=True, max_length=128)
-    major_id: int = Field(foreign_key="majors.id")
-    major: Major = Relationship(back_populates="members")
     memberships: List["Membership"] = Relationship(back_populates="member")
 
     def __str__(self):
@@ -44,29 +52,24 @@ class Role(SQLModel, table=True):
     __tablename__ = "roles"
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(unique=True, max_length=64)
-    membership_roles: List["MembershipRole"] = Relationship(back_populates="role")
+    memberships: List["Membership"] = Relationship(
+        back_populates="roles", link_model=MembershipRole
+    )
 
     def __str__(self):
         return self.name
 
 
-class MembershipRole(SQLModel, table=True):
-    __tablename__ = "membership_roles"
-    membership_id: Optional[int] = Field(
-        default=None, foreign_key="memberships.id", primary_key=True
+class Major(SQLModel, table=True):
+    __tablename__ = "majors"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(unique=True, max_length=128)
+    memberships: List["Membership"] = Relationship(
+        back_populates="majors", link_model=MembershipMajor
     )
-    role_id: Optional[int] = Field(
-        default=None, foreign_key="roles.id", primary_key=True
-    )
-    membership: "Membership" = Relationship(back_populates="membership_roles")
-    role: "Role" = Relationship(back_populates="membership_roles")
 
     def __str__(self):
-        membership_display = (
-            str(self.membership) if self.membership else "Unknown Membership"
-        )
-        role_display = str(self.role) if self.role else "Unknown Role"
-        return f"MembershipRole: {membership_display} - {role_display}"
+        return self.name
 
 
 class Membership(SQLModel, table=True):
@@ -78,7 +81,12 @@ class Membership(SQLModel, table=True):
     tshirt_received: bool = Field(default=False)
     member: Member = Relationship(back_populates="memberships")
     period: Period = Relationship(back_populates="memberships")
-    membership_roles: List["MembershipRole"] = Relationship(back_populates="membership")
+    roles: List["Role"] = Relationship(
+        back_populates="memberships", link_model=MembershipRole
+    )
+    majors: List["Major"] = Relationship(
+        back_populates="memberships", link_model=MembershipMajor
+    )
 
     def __str__(self):
         member_display = (
